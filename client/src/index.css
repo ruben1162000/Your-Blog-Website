@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Hachi+Maru+Pop&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Potta+One&display=swap");
+
+body{
+  background-image: url("brickback.jpg");
+  background-repeat: repeat-y;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+nav{
+  background-color: rgba(255,255,255,0.6);
+}
+a.navbar-brand{
+  color:#d1045d;
+  font-family: 'Hachi Maru Pop', cursive;
+}
+a.nav-link{
+  color:#ff9cc7;
+}
+a:hover,a:active{
+  color:#bd0052;
+}
+a:focus{
+  color:#d1045d;
+}
+
+div.blog-preview>h2{
+  color:#d1045d;
+}
+
+button.navbar-toggler{
+  color:#d1045d;
+  outline:none;
+}
+button.navbar-toggler > i{
+  transition: 500ms cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.rot180{
+  transform: rotate(180deg);
+}
+h1.blog-list-title{
+  color:#d1045d;
+}
+div.blog-preview:hover{
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+div.blog-preview{
+  background-color: rgba(255,255,255,0.6);
+}
