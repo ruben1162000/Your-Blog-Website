@@ -1,6 +1,6 @@
 const blogs = require("../models/blogsModel");
+const blogusers = require("../models/userModel");
 const fs = require("fs");
-const path = require("path");
 module.exports.createBlog = async (req, res) => {
     try {
         const { id: authorId, username: author, email } = req.userData;
@@ -9,12 +9,12 @@ module.exports.createBlog = async (req, res) => {
         const blogObj = { id: savedBlog._id, title: savedBlog.title, body: savedBlog.body };
         fs.mkdir("./data/" + authorId + "/" + savedBlog._id + "/" + "images", { recursive: true }, (err) => {
             if (err) {
-                console.log(`dir for blogid ${savedBlog._id} userid ${userObj.id} could not be created,ERROR: \n` + err);
-                await blogs.deleteOne(blogObj);
+                console.log(`dir for blogid ${savedBlog._id} userid ${authorId} could not be created,ERROR: \n` + err);
+                blogs.deleteOne(blogObj);
                 res.status(500).json({ errMsg: err.Message });
             } else {
-                console.log(`Directory for blogid ${savedBlog._id} userid ${userObj.id} created successfully!`);
-                res.status(201).json({ blogid: blogObj._id });
+                console.log(`Directory for blogid ${savedBlog._id} userid ${authorId} created successfully!`);
+                res.status(201).json({ blogid: blogObj.id });
             }
         });
     } catch (err) {
@@ -27,8 +27,9 @@ module.exports.saveBlog = async (req, res) => {
         const { blogTitle, blogBody } = req.body;
         const { blogid } = req.params;
         const { id: authorId, username: author, email } = req.userData;
-        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { title: blogTitle, body: blogBody, lastEdit: Date.now() });
-        res.status(200).json({ validUpdate: updateRes.n == 1 && updateRes.nModified == 1 });
+        const lastEdit = Date.now();
+        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { title: blogTitle, body: blogBody, lastEdit });
+        res.status(200).json({ validUpdate: updateRes.n == 1 && updateRes.nModified == 1, lastEdit });
     } catch (err) {
         res.status(500).json({ errMsg: err.Message });
     }
@@ -39,8 +40,9 @@ module.exports.saveTitle = async (req, res) => {
         const { blogTitle } = req.body;
         const { blogid } = req.params;
         const { id: authorId, username: author, email } = req.userData;
-        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { title: blogTitle, lastEdit: Date.now() });
-        res.status(200).json({ validUpdate: updateRes.n == 1 && updateRes.nModified == 1 });
+        const lastEdit = Date.now();
+        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { title: blogTitle, lastEdit });
+        res.status(200).json({ validUpdate: updateRes.n == 1 && updateRes.nModified == 1, lastEdit });
     } catch (err) {
         res.status(500).json({ errMsg: err.Message });
     }
@@ -51,8 +53,9 @@ module.exports.saveBody = async (req, res) => {
         const { blogBody } = req.body;
         const { blogid } = req.params;
         const { id: authorId, username: author, email } = req.userData;
-        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { body: blogBody, lastEdit: Date.now() });
-        res.status(200).json({ validUpdate: updateRes.n == 1 && updateRes.nModified == 1 });
+        const lastEdit = Date.now();
+        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { body: blogBody, lastEdit });
+        res.status(200).json({ validUpdate: updateRes.n == 1 && updateRes.nModified == 1, lastEdit });
     } catch (err) {
         res.status(500).json({ errMsg: err.Message });
     }
@@ -70,7 +73,7 @@ module.exports.deleteBlog = async (req, res) => {
                 if (err) {
                     console.log(`dir for blogid ${blogid} userid ${authorId} could not be deleted,ERROR: \n` + err);
                     resaveObj = new blogs(deleteObj);
-                    await resaveObj.save();
+                    resaveObj.save();
                     res.status(500).json({ errMsg: err.Message });
                 } else {
                     console.log(`dir for blogid ${blogid} userid ${authorId} deleted successfully`);
@@ -88,7 +91,7 @@ module.exports.deleteBlog = async (req, res) => {
 module.exports.getPostedBlogs = async (req, res) => {
     try {
         const { id: authorId, username: author, email } = req.userData;
-        allBlogs = await blogs.find({ authorId, posted: true }, '_id title lastEdit');
+        allBlogs = await blogs.find({ authorId, posted: true }, '-posted -body -__v').populate('authorId', 'username -_id');
         res.json(allBlogs);
     } catch (err) {
         res.status(500).json({ errMsg: err.Message });
@@ -99,7 +102,7 @@ module.exports.getPostedBlogs = async (req, res) => {
 module.exports.getPendingBlogs = async (req, res) => {
     try {
         const { id: authorId, username: author, email } = req.userData;
-        allBlogs = await blogs.find({ authorId, posted: false }, '_id title lastEdit');
+        allBlogs = await blogs.find({ authorId, posted: false }, '-posted -body -__v').populate('authorId', 'username -_id');
         res.json(allBlogs);
     } catch (err) {
         res.status(500).json({ errMsg: err.Message });
@@ -107,40 +110,13 @@ module.exports.getPendingBlogs = async (req, res) => {
 
 };
 
-module.exports.uploadImage = async (req, res) => {
-    try {
-        const { blogid } = req.params;
-        const { id: authorId, username: author, email } = req.userData;
-        let image = req.files.uploadimg;
-        fs.writeFile(`./data/${authorId}/${blogid}/images/${image.name}`, image.data, (err) => {
-            if (err) throw err;
-            res.json({ url: `http://localhost:5000/api/blogs/${blogid}/images/${image.name}` });
-        });
-
-    } catch (err) {
-        res.status(500).json({ errMsg: err.Message });
-    }
-
-}
-
-module.exports.getImage = async (req, res) => {
-    try {
-        const { blogid, imgname } = req.params;
-        const { id: authorId, username: author, email } = req.userData;
-        res.sendFile(path.join(__dirname, `/data/${authorId}/${blogid}/images/${imgname}`));
-
-    } catch (err) {
-        res.status(500).json({ errMsg: err.Message });
-    }
-
-}
 
 module.exports.getBlog = async (req, res) => {
     try {
         const { blogid } = req.params;
         const { id: authorId, username: author, email } = req.userData;
-        blogObj = await blogs.findOne({ authorId, _id: blogid });
-        res.json({ blogObj });
+        blogObj = await blogs.findOne({ authorId, _id: blogid }, 'title body lastEdit');
+        res.json(blogObj);
     } catch (err) {
         res.status(500).json({ errMsg: err.Message });
     }
@@ -149,10 +125,9 @@ module.exports.getBlog = async (req, res) => {
 
 module.exports.postBlog = async (req, res) => {
     try {
-        const { blogTitle, blogBody } = req.body;
         const { blogid } = req.params;
         const { id: authorId, username: author, email } = req.userData;
-        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { title: blogTitle, body: blogBody, posted: true, lastEdit: Date.now() });
+        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { posted: true });
         res.status(200).json({ validUpdate: updateRes.n == 1 && updateRes.nModified == 1 });
     } catch (err) {
         res.status(500).json({ errMsg: err.Message });
@@ -163,7 +138,7 @@ module.exports.unpostBlog = async (req, res) => {
     try {
         const { blogid } = req.params;
         const { id: authorId, username: author, email } = req.userData;
-        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { posted: true });
+        const updateRes = await blogs.updateOne({ _id: blogid, authorId: authorId }, { posted: false });
         res.status(200).json({ validUpdate: updateRes.n == 1 && updateRes.nModified == 1 });
     } catch (err) {
         res.status(500).json({ errMsg: err.Message });

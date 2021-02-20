@@ -1,16 +1,21 @@
 import useFetch from '../hooks/useFetch';
-import { useContext, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-
 const Create = () => {
-    const { userData, setUserData } = useContext("UserContext");
-    const { data, isLoading, loadError } = useFetch(`api/blogs/create`, { "x-auth-token": userData.token }, "POST");
     const history = useHistory();
-    useEffect(() => {
-        if (data) {
-            history.replace(`blogEditor/${data.blogid}`);
-        }
-    }, [data]);
+    const token = localStorage.getItem("auth-token");
+    if (!token) {
+        history.replace("/");
+    }
+
+    const { data, isLoading, loadError } = useFetch(`/api/blogs/create`, { "x-auth-token": token }, "POST", (data) => { history.replace(`/blogEditor/${data.blogid}`); });
+
+    // useEffect(() => {
+    //     if (data !== null)
+    //         if (data.blogid) {
+    //             history.replace(`/blogEditor/${data.blogid}`);
+    //         }
+    // }, [data]);
     return (
         <div className="mx-5">
             {loadError && <div>{loadError}</div>}

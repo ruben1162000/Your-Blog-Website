@@ -1,46 +1,56 @@
 // import logo from './logo.svg';
 // import './App.css';
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from './components/Navbar';
 import Home from './components/Home';
 import Create from './components/Create';
 import Signup from './components/Signup';
-import Signup from './components/Login';
-import Signup from './components/PostedBlogs';
-import Signup from './components/PendingBlogs';
-import UserContext from "./contexts/UserContext";
+import Login from './components/Login';
+import Logout from './components/Logout';
+import PostedBlogs from './components/PostedBlogs';
+import PendingBlogs from './components/PendingBlogs';
+import ViewBlog from './components/ViewBlog';
+import BlogEditor from './components/BlogEditor';
+import ErrorPage from './components/ErrorPage';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import axios from "axios";
-import Login from "./components/Login";
-
+import UserContext from "./contexts/UserContext";
 function App() {
-  const [userData, setUserData] = useState({
-    token: undefined,
-    user: undefined,
-  });
-
+  const [userData, setUserData] = useState({ token: "", username: "" });
   useEffect(() => {
     const loginCheck = async () => {
       let token = localStorage.getItem("auth-token");
+      let username = localStorage.getItem("username");
       if (token === null) {
         localStorage.setItem("auth-token", "");
+        localStorage.setItem("username", "");
         token = "";
-      }
-      const tokenRes = await axios.post("/api/users", null, {
-        headers: { "x-auth-token": token },
-      });
-      if (tokenRes.status == 500) {
-        //some 500 page
-      }
-      else if (tokenRes.valid) {
-        setUserData({
-          token,
-          user: userRes.userData,
+        username = "";
+        setUserData({ token, username });
+        return;
+      } else if (token === "") return;
+      try {
+        const tokenRes = await axios.post("/api/user", null, {
+          headers: { "x-auth-token": token }
         });
+        const { status, data } = tokenRes;
+        if (data.valid) {
+          setUserData({ token, username });
+        } else {
+          localStorage.setItem("auth-token", "");
+          localStorage.setItem("username", "");
+          token = "";
+          username = "";
+          setUserData({ token, username });
+        }
+      } catch (error) {
+        const { status, data } = error.response;
+        //500 page
       }
     }
     loginCheck();
   }, []);
+
 
   return (
     <Router>
@@ -52,7 +62,7 @@ function App() {
               <Route exact path="/">
                 <Home />
               </Route>
-              <Route exact path="/viewBlog/:blogid">
+              <Route path="/viewBlog/:blogid">
                 <ViewBlog />
               </Route>
               <Route path="/postedBlogs">
@@ -65,13 +75,22 @@ function App() {
                 <Create />
               </Route>
               <Route path="/blogEditor/:blogid">
-                <Create />
+                <BlogEditor />
               </Route>
               <Route path="/signup">
                 <Signup />
               </Route>
               <Route path="/login">
                 <Login />
+              </Route>
+              <Route path="/logout">
+                <Logout />
+              </Route>
+              <Route path="/Error500">
+                <ErrorPage status={500} />
+              </Route>
+              <Route path="*">
+                <ErrorPage status={404} />
               </Route>
             </Switch>
           </div>

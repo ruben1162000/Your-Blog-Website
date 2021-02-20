@@ -10,7 +10,7 @@ module.exports.signupUser = async (req, res) => {
     }
 
     const emailAlreadyexists = async email => {
-        if (await blogUser.findOne({ email: email }))
+        if ((await blogUser.findOne({ email: email }).exec()))
             return true;
         return false;
     }
@@ -48,11 +48,11 @@ module.exports.signupUser = async (req, res) => {
             return res.status(400).json({ name: "emailErrMsg", msg: "enter a valid mail" });
         }
 
-        if (emailAlreadyexists(email)) {
+        if (await emailAlreadyexists(email)) {
             return res.status(400).json({ name: "emailErrMsg", msg: "email already used" });
         }
 
-        if (unameAlreadyExists(username)) {
+        if (await unameAlreadyExists(username)) {
             return res.status(400).json({ name: "usernameErrMsg", msg: "already taken" });
         }
 
@@ -80,12 +80,12 @@ module.exports.signupUser = async (req, res) => {
         fs.mkdir("./data/" + userObj.id, (err) => {
             if (err) {
                 console.log(`dir for userid ${userObj.id} could not be created,ERROR: \n` + err);
-                await blogUser.deleteOne(savedUser);
+                blogUser.deleteOne(savedUser);
                 res.status(500).json({ errMsg: err.message });
             } else {
                 console.log(`Directory for userid ${userObj.id} created successfully!`);
                 const token = jwt.sign(userObj, process.env.JWT_SECRET);
-                res.json({ token, userData: userObj });
+                res.json({ token, username: userObj.username });
             }
         });
         /********* INSERTING INTO DATABASE ends ***********/
@@ -112,7 +112,7 @@ module.exports.loginUser = async (req, res) => {
             return res.status(400).json({ allErrMsg: "incorrect password" });
         const userObj = { id: user._id, username: user.username, email: user.email };
         const token = jwt.sign(userObj, process.env.JWT_SECRET);
-        res.json({ token, userData: userObj });
+        res.json({ token, username: userObj.username });
 
     } catch (err) {
         res.status(500).json({ errMsg: err.message });
@@ -127,7 +127,7 @@ module.exports.getUser = (req, res) => {
         const verifiedObj = jwt.verify(token, process.env.JWT_SECRET);
         if (!verifiedObj)
             return res.json({ valid: false });
-        return res.json({ valid: true, userData: verifiedObj });
+        return res.json({ valid: true });
 
     } catch (err) {
         res.status(500).json({ errMsg: err.message });
@@ -152,8 +152,8 @@ module.exports.deleteUser = async (req, res) => {
             if (err) {
                 console.log(`dir for userid ${verifiedObj.id} could not be deleted,ERROR: \n` + err);
                 resaveUserObj = new blogUser(delUserObj);
-                await resaveUserObj.save();
-                await blogs.insertMany(delBlogs);
+                resaveUserObj.save();
+                blogs.insertMany(delBlogs);
                 res.status(500).json({ errMsg: err.Message });
             } else {
                 console.log(`dir for userid ${verifiedObj.id} deleted successfully`);
