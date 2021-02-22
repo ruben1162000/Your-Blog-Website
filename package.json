@@ -1,11 +1,18 @@
 {
-  "name": "your_blog",
+  "name": "your_blogspot",
   "version": "1.0.0",
   "description": "blogging website",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
+    "build": "cd client && npm run build",
+    "install-client": "cd client && npm install",
+    "start": "node server.js",
+    "server": "nodemon server.js",
+    "heroku-postbuild": "npm run install-client && npm run build"
+  },
+  "engines": {
+    "node": "14.15.4"
   },
   "author": "Ruben Dsouza",
   "license": "ISC",

@@ -1,0 +1,2 @@
+This is where images of blogs of respective users are stored
+format: data/userid/blogid/images

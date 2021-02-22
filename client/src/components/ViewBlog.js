@@ -12,10 +12,10 @@ const ViewBlog = () => {
                 blog &&
                 <article className="blog-details m-5 p-3 rounded">
                     <h2>{blog.title}</h2>
-                    <p>&mdash; {blog.authorId.username}</p>
+                    <p style={{ color: "#d1045d" }}>&mdash; {blog.authorId.username}</p>
                     <div dangerouslySetInnerHTML={{ __html: blog.body }}>
                     </div>
-                    <div>{blog.lastEdit}</div>
+                    <label style={{ color: "#d1045d" }}>Posted on : <i class="fas fa-calendar-day"></i>&nbsp;{new Date(blog.lastEdit).toDateString()}</label>
                 </article>
             }
         </div>

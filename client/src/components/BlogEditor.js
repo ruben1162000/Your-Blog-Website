@@ -108,7 +108,7 @@ const BlogEditor = () => {
     return (
         <div className="blog-editor m-3">
             <input type="text" className="mb-2" value={title} required onChange={(e) => { setTitle(e.target.value); saveTitle(); }} />
-            <label>&nbsp;&nbsp;&nbsp;Last Save : {lastEdit}</label>
+            <label style={{ color: "#d1045d" }}>&nbsp;&nbsp;&nbsp;Last Save : <i className="fas fa-clock"></i>&nbsp;{new Date(lastEdit).toDateString() + ", " + new Date(lastEdit).toLocaleTimeString()}</label>
             <Editor
                 editorState={editorState}
                 wrapperClassName="m-5"

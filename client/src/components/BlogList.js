@@ -65,6 +65,7 @@ const BlogList = (props) => {
                         <Ltag to={`/viewBlog/${blog._id}`} key={blog._id}>
                             <div className="blog-preview mb-5 rounded">
                                 <h2 className="m-3">{blog.title}</h2>
+                                <label style={{ color: "#d1045d" }}>&nbsp;&nbsp;&nbsp;<i class="fas fa-calendar-day"></i>&nbsp;{new Date(blog.lastEdit).toDateString()}</label>
                                 <blockquote className='ml-2'>-{blog.authorId.username}</blockquote>
                             </div>
                         </Ltag>
@@ -72,10 +73,11 @@ const BlogList = (props) => {
                     blogs.map((blog) => (
                         <div className="blog-preview mb-5 rounded" key={blog._id}>
                             <h2 className="m-3">{blog.title}</h2>
+                            <label style={{ color: "#d1045d" }}>&nbsp;&nbsp;&nbsp;<i class="fas fa-calendar-day"></i>&nbsp;{new Date(blog.lastEdit).toDateString()}</label>
                             <blockquote className='ml-3'>&mdash;&nbsp;{blog.authorId.username}</blockquote>
                             <div className="btn-group ml-3 my-2">
                                 <Ltag to={`/viewBlog/${blog._id}`} className="btn btn-primary"><i className="fas fa-eye"></i></Ltag>
-                                <button className="btn btn-success" onClick={() => props.page == 1 ? editPosted(blog._id) : editPending(blog._id)}><i className="fas fa-edit"></i></button>
+                                <button className="btn btn-success" onClick={() => props.page == 1 ? editPosted(blog._id) : editPending(blog._id)}>&nbsp;<i className="fas fa-edit"></i></button>
                                 <button className="btn btn-danger" onClick={() => deleteBlog(blog._id)}><i className="fas fa-trash"></i></button>
                             </div>
                         </div>
